@@ -95,6 +95,7 @@ if __name__ == '__main__':
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
     reviewJSON = r"../yelp_academic_dataset_review.json"
     handle = open(reviewJSON, 'r')
+    output = open("Labeled_Reviews.json", 'w')
 
     count = 0
     
@@ -129,5 +130,6 @@ if __name__ == '__main__':
                 count += 1
 
     handle.close()
-    for key, value in reviewDict.items():
-        print key, value
+    json.dump(reviewDict, output, indent=4)
+        #for key, value in reviewDict.items():
+#print key, value
