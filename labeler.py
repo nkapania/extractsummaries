@@ -57,7 +57,7 @@ restaurant IDs are pulled out if no argument is provided
 '''
 def getRestaurantIDs(numIDs=15000):
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_business.json HERE
-    businessJSON = r"../yelp_academic_dataset_business.json"
+    businessJSON = r"yelp_academic_dataset_business.json"
     handle = open(businessJSON, 'r');
     count = 0
     
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     restaurantIDs = getRestaurantIDs(50)
 
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-    reviewJSON = r"../yelp_academic_dataset_review.json"
+    reviewJSON = r"yelp_academic_dataset_review.json"
     handle = open(reviewJSON, 'r')
     output = open("Labeled_Reviews.json", 'w')
 
