@@ -31,7 +31,6 @@ if __name__ == '__main__':
     
     startInd = int(sys.argv[1])
     endInd = int(sys.argv[2])
-    numReviews = endInd - startInd
 
     # Pulls in the first 50 restaurant IDs
     restaurantIDs = utils.getRestaurantIDs(50)
@@ -49,12 +48,14 @@ if __name__ == '__main__':
     # in the restaurantIDs list
     word_count = CHARACTER_MINIMUM
     for line in handle:
-        if count >= numReviews: break
+        if count >= endInd: break
         review = json.loads(line)
         if review["business_id"] in restaurantIDs:
             if len(review["text"]) > CHARACTER_MINIMUM:
-                # Generate a Review object for current review
-                r = YelpReview.Review(review["review_id"], review["text"])
+                if count < startInd:
+                    count += 1
+                    continue
+                id = review["review_id"]
                 
                 # Output relevant review contents
                 print "[Review %d]:" % (count+1)
@@ -63,12 +64,12 @@ if __name__ == '__main__':
                 
                 # Cycle through each sentence and wait for user input
                 sentenceIndex = 0
-                for sentence in r.sentences:
+                for sentence in utils.processReviewText(review["text"]):
                     print sentence
                     user_input = raw_input("Summary sentence (y/n): ")
                     if user_input == "y":
-                        if r.id in reviewDict: reviewDict[r.id].append(sentenceIndex)
-                        else: reviewDict[r.id] = [sentenceIndex]
+                        if id in reviewDict: reviewDict[id].append(sentenceIndex)
+                        else: reviewDict[id] = [sentenceIndex]
                     sentenceIndex += 1
 
                 count += 1
