@@ -38,7 +38,6 @@ if __name__ == '__main__':
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
     reviewJSON = r"../yelp_academic_dataset_review.json"
     handle = open(reviewJSON, 'r')
-    output = open("Labeled_Reviews.json", 'w')
 
     count = 0
     
@@ -71,8 +70,12 @@ if __name__ == '__main__':
                         if id in reviewDict: reviewDict[id].append(sentenceIndex)
                         else: reviewDict[id] = [sentenceIndex]
                     sentenceIndex += 1
+            
+                # Open, write, close to save intermediate progress
+                output = open("Labeled_Reviews.json", 'w')
+                json.dump(reviewDict, output, indent=4)
+                output.close()
 
                 count += 1
 
     handle.close()
-    json.dump(reviewDict, output, indent=4)
