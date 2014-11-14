@@ -14,9 +14,9 @@ import re
 import YelpReview
 
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_business.json HERE
-businessJSON = r"../yelp_academic_dataset_business.json"
+businessJSON = r"yelp_academic_dataset_business.json"
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-reviewJSON = r"../yelp_academic_dataset_review.json"
+reviewJSON = r"yelp_academic_dataset_review.json"
 
 '''
 Pull out the first [numIDs] number of business IDs that are categorized
@@ -88,15 +88,11 @@ def getReview(id):
             r = YelpReview.Review(id)
             r.ProcessTerms(reviewText, stopWords)
             r.ProcessSentences(reviewText)
-            print "ReviewID: ", r.id
-            for k, v in r.terms.items(): print k, v
-            for s in r.sentences: print s.text
             break
 
     handle.close()
     return r
 
-getReview("zaGZsJTnQMSXepntO6Vsxg")
 
 
 
