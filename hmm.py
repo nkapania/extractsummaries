@@ -35,11 +35,8 @@ def getStateTransitions(N = 6):
             newState = getSucc(state, isSummary(i), N)
             M[state, newState] += 1
             state = newState
-                
-    p = normalize(p)
-    M= normalize(M)
 
-    return(M, p)    
+    return(normalize(M), normalize(p))    
 
 #get successor state given current state, whether next sentence is summary or not, and number of summary sentences
 def getSucc(state, isSummary, N):
