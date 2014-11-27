@@ -2,21 +2,36 @@
 #########################################################################
 Created by: Sean Shi
 Created date: 11/13/14
+Modified data: 11/25/14
 -------------------------------------------------------------------------
 Some helpful functions for manipulating JSON documents.
 -------------------------------------------------------------------------
 #########################################################################
 """
 
-
+import collections
 import json
 import re
+import string
 import YelpReview
 
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_business.json HERE
-businessJSON = r"yelp_academic_dataset_business.json"
+businessJSON = r"../yelp_academic_dataset_business.json"
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-reviewJSON = r"yelp_academic_dataset_review.json"
+reviewJSON = r"../yelp_academic_dataset_review.json"
+
+
+'''
+Read in file of stop words. Stop words are common terms that hold little value
+in the context of understanding the document when assessed alone. Many functions
+utilize this list so load it only once for efficiency.
+'''
+handle = open("stopWords.txt", 'r')
+STOPWORDS = set([line.strip() for line in handle.readlines()])
+handle.close()
+# Container of all punctuation to be removed from strings
+REGEX = re.compile('[%s]' % re.escape(string.punctuation))
+
 
 '''
 Pull out the first [numIDs] number of business IDs that are categorized
@@ -51,17 +66,7 @@ def loadLabeledReviews(jsonFilename):
     handle.close()
     return reviewDict
 
-
-'''
-Read in file of stop words. Stop words are common terms that hold little value
-in the context of understanding the document when assessed alone.
-'''
-def loadStopWords(stopWordFilename):
-    handle = open(stopWordFilename, 'r')
-    stopWords = [line.strip() for line in handle.readlines()]
-    handle.close()
-    return stopWords
-
+corpus = loadLabeledReviews("corpus.json")
 
 
 # Remove punctuation and whitespace from sentences in review.
@@ -73,20 +78,32 @@ def processReviewText(text):
 
 
 '''
+Take in a sentence string and process individual words as tokens. Replace all
+punctuation from token with spaces, and convert it into lowercase. Append to 
+return list if the token does not belong to the set of STOPWORDS.
+'''
+def processSentenceText(text):
+    tokens = []
+    for token in REGEX.sub(' ', text).lower().split():
+        if token not in STOPWORDS: tokens.append(token)
+    return tokens
+
+
+
+'''
 Look through all reviews until reviewID matches input ID. Build review object
 from matching review
 '''
 def getReview(id):
     handle = open(reviewJSON, 'r')
     # Hardcoded to a document containing most common stop words.
-    stopWords = loadStopWords("stopWords.txt")
     
     for line in handle:
         review = json.loads(line)
         if review["review_id"] == id:
             reviewText = processReviewText(review["text"])
             r = YelpReview.Review(id)
-            r.ProcessTerms(reviewText, stopWords)
+            r.ProcessTerms(reviewText, STOPWORDS)
             r.ProcessSentences(reviewText)
             break
 
@@ -94,10 +111,35 @@ def getReview(id):
     return r
 
 
+'''
+There are 1,125,458 total reviews. Of those 706,646 reviews are listed under the
+category Restaurants.
+'''
+def getRestaurantCorpus():
+    
+    # convert to set for faster membership testing
+    restaurantIDs = set(getRestaurantIDs())
+    corpus = collections.Counter()
+    handle = open(reviewJSON, 'r')
+
+    count = 0
+    for line in handle:
+        review = json.loads(line)
+        if review["business_id"] in restaurantIDs:
+            count += 1
+            print count
+            for token in REGEX.sub(' ', review["text"]).lower().split():
+                if token not in STOPWORDS: corpus[token] += 1
+
+    handle.close()
+    return corpus
 
 
+def getOccurancesFromCorpus(termCounter):
+    total = 0
+    for term in termCounter: total += corpus[term]
+    return total
 
-
-
-
+def getFreqFromCorpus(term):
+    return corpus[term]
 
