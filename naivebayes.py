@@ -1,22 +1,25 @@
-##This code implements naive-bayes for summary extraction
-#future work will account for dependencies via a HMM
-
-#Nitin Kapania
-#______________________________________________________________#
-
-
-#until we get actual test data, lets fake some data and some features
-
-#dict from reference ID's to labels - this will be loaded
-#from Sean's library in the future
+"""
+#########################################################################
+Created by: Nitin Kapania
+Created date: 11/12/14
+Modified data: 11/13/14
+-------------------------------------------------------------------------
+Code that implements naive - bayes for Yelp sentence extraction.  
+-------------------------------------------------------------------------
+#########################################################################
+"""
 
 from sets import Set
-import math
 
 def getReviews():
-    reviews = {'a': 1, 'b': 1, 'c': 0, 'd': 0}
-    return reviews
-
+    reviewJSON = r"Labeled_Reviews.json"
+    handle = open(reviewJSON, 'r')
+    
+    for line in handle:
+        print line
+        review = json.loads(line)
+        print review
+    return 0
 
 #primitive featurizer - will be loaded from Sean's library
 #in future
@@ -35,11 +38,11 @@ def getFeatures(review):
 #or for non-summary sentences (label = 0).
 #Dict feature is a map from feature name to feature value
 def createTrainData(reviews, label):
-    features = []
+    trainData = []
     for reviewID in reviews.keys():
         if reviews[reviewID] == label:
-            features.append(getFeatures(reviewID))
-    return features
+            trainData.append(getFeatures(reviewID))
+    return trainData
 
 def getFeatureSet(posFeatures, negFeatures):
     featureSet = Set()
@@ -51,6 +54,7 @@ def getFeatureSet(posFeatures, negFeatures):
             featureSet.add(key)
     return featureSet
 
+#really bad laplace smoothing right now - need to fix this
 def getConditionals(trainData, featureSet):
     den = len(trainData)+1
     conditional = {}
@@ -75,22 +79,23 @@ def classify(testData, py, posConditionals, negConditionals):
     return 1 if valPos > valNeg else 0
     
 
-reviews= getReviews()
-posData = createTrainData(reviews, 1)
-negData = createTrainData(reviews, 0)
-featureSet = getFeatureSet(posData, negData)
-posConditionals = getConditionals(posData, featureSet)
-negConditionals = getConditionals(negData, featureSet)
-py = getPrior(posData, negData)
-testData = getFeatures('f')
+reviews = getReviews()
+#reviews= getReviews()
+#posData = createTrainData(reviews, 1)
+#negData = createTrainData(reviews, 0)
+#featureSet = getFeatureSet(posData, negData)
+#posConditionals = getConditionals(posData, featureSet)
+#negConditionals = getConditionals(negData, featureSet)
+#py = getPrior(posData, negData)
+#testData = getFeatures('f')
 
 
-print py
-print posData
-print negData
-print featureSet
-print posConditionals
-print negConditionals
-print classify(testData, py, posConditionals, negConditionals)
+#print py
+#print posData
+#print negData
+#print featureSet
+#print posConditionals
+#print negConditionals
+#print classify(testData, py, posConditionals, negConditionals)
     
 
