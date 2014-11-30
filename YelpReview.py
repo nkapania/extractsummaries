@@ -28,7 +28,7 @@ class Sentence(object):
     # 3) Number of terms in the sentence.
     # 4) Baseline term probability
     # 5) Document term probability
-    def __init__(self, index, numTerms, baselineProb, documentProb):
+    def __init__(self, index, numTerms, baselineProb, documentProb, text):
         # features defined here
         self.index = index
         if (index == 0): self.pos = 1
@@ -36,6 +36,8 @@ class Sentence(object):
         self.numTerms = math.log10(numTerms + 1)
         self.baselineProb = baselineProb
         self.documentProb = documentProb
+        self.phi = [self.pos, self.numTerms, self.baselineProb, self.documentProb]
+        self.text = text
 
 class Review(object):
     
@@ -78,7 +80,7 @@ class Review(object):
                 baselineProb += math.log(baselineTermFreq/self.baselineFreq)
                 docTermFreq = self.terms[term]
                 documentProb += math.log(docTermFreq/self.documentFreq)
-            s = Sentence(i, len(terms), baselineProb, documentProb)
+            s = Sentence(i, len(terms), baselineProb, documentProb, reviewText[i])
             self.sentences.append(s)
 
     # Function: PrintContents
