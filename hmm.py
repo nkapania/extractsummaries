@@ -12,8 +12,71 @@ Requires numpy package to be installed.
 import utils
 import YelpReview
 import numpy as np
+import scipy.stats import chi2
 
+class HiddenMarkovModel(object):
+    def __init__(self, numStates, numFeatures):
+        self.M = np.zeros((numStates, numStates))
+        self.B = MultivariableNormals(numStates, numFeatures) #initialize collection of multivariable functions
+        self.p=  np.zeros((1, numStates))
+        self.numStates = numStates
+        self.numFeatures = numFeatures
 
+    def incrementP(self, state):
+        self.p[0][state] += 1
+
+    def incrementM(self, state, newState):
+        self.M[state][newState] += 1
+
+    def normalize(self):
+        self.B.normalizeSigma()
+        norm(self.M)
+        norm(self.p)
+
+    #given a hidden markov model and YelpReview object, summarize it in k sentences 
+    def summarize(self, review, k):
+        w = 0.0
+        T = len(review.sentences)-1
+        for state in range(self.numStates):
+            w += getAlpha(self, T, state)
+
+        gamma = []
+        for t in range(T):
+            score = 0.0
+            for state in range(self.numStates):
+                if (j % 2): #odd -> summary state of HMM 
+                    score -= getAlpha(self, t, state, review)*getBeta(self, t, T, review)/w
+            gamma.append[score]
+
+        sentenceRankings = np.array[gamma]
+        bestIndices = sentenceRankings.argsort()
+        for i in range(k):
+            print review.sentences[bestIndices[i]].text
+            
+            
+    #obtain D_o matrix - need better intution about what this really does
+    def getD_o(self, review, t):
+        D_o = np.asmatrix(np.zeros(self.numStates, self.numStates))
+        dof = self.numFeatures
+        for state in range(numStates):
+            phiM = np.asmatrix(review.sentences[t].phi).T
+            arg = phiM -self.B.mu[state]
+            D_o[state,state] = 1 - chi2.cdf(arg.T*numpy.linalg.inv(self.B.sigma[state])*arg, dof)
+        return D_o
+
+    #recursively compute alpha score    
+    def getAlpha(self, t, state, review):
+        if t == 0: return self.p[0][state]
+        else:
+            return getD_o(self, review, t)*np.asmatrix(self.M).T*getAlpha(self, t-1, state, review)
+
+    #recursively compute beta score
+    def getBeta(self, t, T, review):
+        if t == T: return 1
+        else:
+            return np.asmatrix(self.M)*getD_o(self, review, t)*getBeta(self, t+1, T, review)
+
+    
 class MultivariableNormals(object):
     def __init__(self, numStates, numFeatures):
         self.mu = []
@@ -37,7 +100,16 @@ class MultivariableNormals(object):
     def normalizeSigma(self):
         for state in range( len(self.counts) ):
             self.sigma[state] = self.sigma[state] / self.counts[state]
-            
+
+    def printResults(self):
+        for state in range( len(self.counts) ):
+            print "State %d : Counts %d" % (state, self.counts[state])
+            print "Feature Mu: "
+            print self.mu[state]
+            print ""
+            #print "Feature Sigma "
+            #print self.sigma[state]
+                
 
 #come up with state transition matrix from labeled data, as well
 #as p distribution of initial sentences, output in a tuple of (M, p)
@@ -45,30 +117,33 @@ class MultivariableNormals(object):
 #M is a (2N + 1) x (2N + 1) Markov transition matrix, where N is number of summary sentences in HMM
 #model, p is a (2*N + 1) distribution.
 
-def getMaxLikelihoodEstimates(N = 6, numFeatures = 4):
+def trainHMM(labeledReviews, N = 6, numFeatures = 4):
 
-    #initialize estimates for parameters b, p, and M
-    b = MultivariableNormals(N, numFeatures) #initialize collection of multivariable functions                   
-    p = np.zeros((1, 2*N+1))
-    M = np.zeros((2*N+1, 2*N+1))
+    #get number of states from number of summary sentences N
+    numStates = 2*N+1
+
+    #initialize hidden markov model                 
+    hmm = HiddenMarkovModel(numStates, numFeatures)
     
-    reviews = utils.loadLabeledReviews("Labeled_Reviews.json")
+    #load reviews    
+    reviews = utils.loadLabeledReviews(labeledReviews)
 
     #first pass - transition matrix M, probability distribution p, feature means.
     for reviewID in reviews.keys():
-        numSentences = reviews[reviewID].pop(0)
+        print "Processing Review: %s" % reviewID        
+        numSentences = reviews[reviewID].pop(0) #legacy features - now we have YelpReview implemented so can remove this. Will required modifying labeled_reviews.json
         isSummary = getSummaryFunc(reviews[reviewID])
         review = utils.getReview(reviewID)
         assert numSentences == len(review.sentences)  # sanity check that labeled review is the same as the sentence in the review object
 
         #get initial state and increment p array        
         state = 1 if isSummary(0) else 0
-        p[0][state] += 1
+        hmm.incrementP(state)
 
         for i in range(1, numSentences):
-            b.updateMu(state, review.sentences[i].phi)
+            hmm.B.updateMu(state, review.sentences[i].phi)
             newState = getSucc(state, isSummary(i), N)
-            M[state, newState] += 1
+            hmm.incrementM(state, newState) 
             state = newState
 
     #second pass - feature covariance matrices
@@ -78,15 +153,12 @@ def getMaxLikelihoodEstimates(N = 6, numFeatures = 4):
 
         state = 1 if isSummary(0) else 0
         for i in range(1, len(review.sentences)):
-            b.updateSigma(state, review.sentences[i].phi)
+            hmm.B.updateSigma(state, review.sentences[i].phi)
             state = getSucc(state, isSummary(i), N)
 
-    #normalize 
-    p = normalize(p)
-    M = normalize(M)
-    b.normalizeSigma()
-        
-    return(M, p, b) 
+    #normalize
+    hmm.normalize()
+    return hmm 
   
 
 #get successor state given current state, whether next sentence is summary or not, and number of summary sentences
@@ -100,18 +172,20 @@ def getSucc(state, isSummary, N):
     if state % 2: return state + 2 if isSummary else state+1 #intermediate summary state
     else: return state + 1 if isSummary else state           #intermediate non-summary
 
-#create function to query whether a sentence is a summary sentence or not
-def getSummaryFunc(summaryList):
-    return lambda x: x in summaryList
-    
-#normalize transition matrix and initial distribution
-#so every column sums to 1
-def normalize(A):
+def norm(A):
     numRows, numCols = A.shape
     for i in range(0, numRows): #iterate through each row
         A[i] = A[i]/sum(A[i])
     return A
 
-M, p, b = getMaxLikelihoodEstimates(3)
-print M
-print p
+#create function to query whether a sentence is a summary sentence or not
+def getSummaryFunc(summaryList):
+    return lambda x: x in summaryList
+    
+    
+    
+
+markovModel = trainHMM("Labeled_Reviews.json", 3, 4)
+print markovModel.M
+print markovModel.p
+markovModel.B.printResults()
