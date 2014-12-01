@@ -130,14 +130,18 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
 
     #first pass - transition matrix M, probability distribution p, feature means.
     for reviewID in reviews.keys():
-        print "Processing Review: %s" % reviewID        
-        numSentences = reviews[reviewID].pop(0) #legacy features - now we have YelpReview implemented so can remove this. Will required modifying labeled_reviews.json
-        isSummary = getSummaryFunc(reviews[reviewID])
+        print "Processing Review: %s" % reviewID
+        #numSentences = reviews[reviewID].pop(0) #legacy features - now we have YelpReview implemented so can remove this. Will required modifying labeled_reviews.json
+        
         review = utils.getReview(reviewID)
-        assert numSentences == len(review.sentences)  # sanity check that labeled review is the same as the sentence in the review object
+        #assert numSentences == len(review.sentences)  # sanity check that labeled review is the same as the sentence in the review object
 
+        numSentences = len(review.sentences)
+        try: numSummarySentences = len(reviews[reviewID])
+        except TypeError: continue
+        
+        isSummary = getSummaryFunc(reviews[reviewID])
         #get initial state and increment p array
-        print isSummary(0)
         state = 1 if isSummary(0) else 0
         hmm.incrementP(state)
 
@@ -149,9 +153,14 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
 
     #second pass - feature covariance matrices
     for reviewID in reviews.keys():
-        isSummary = getSummaryFunc(reviews[reviewID])
+        print "Processing Review (Pass 2): %s" % reviewID
         review = utils.getReview(reviewID)
-
+        
+        numSentences = len(review.sentences)
+        try: numSummarySentences = len(reviews[reviewID])
+        except TypeError: continue
+        
+        isSummary = getSummaryFunc(reviews[reviewID])
         state = 1 if isSummary(0) else 0
         for i in range(1, len(review.sentences)):
             hmm.B.updateSigma(state, review.sentences[i].phi)
@@ -183,10 +192,8 @@ def norm(A):
 def getSummaryFunc(summaryList):
     return lambda x: x in summaryList
     
-    
-    
 
 markovModel = trainHMM("Labeled_Reviews_1100-1156.json", 3, 4)
-#print markovModel.M
-#print markovModel.p
-#markovModel.B.printResults()
+print markovModel.M
+print markovModel.p
+markovModel.B.printResults()
