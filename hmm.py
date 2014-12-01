@@ -12,7 +12,7 @@ Requires numpy package to be installed.
 import utils
 import YelpReview
 import numpy as np
-import scipy.stats import chi2
+from scipy.stats import chi2
 
 class HiddenMarkovModel(object):
     def __init__(self, numStates, numFeatures):
@@ -34,58 +34,50 @@ class HiddenMarkovModel(object):
         norm(self.p)
 
     #given a hidden markov model and YelpReview object, summarize it in k sentences 
-    def summarize(self, review, k):
-        w = 0.0
+    def summarize(self, review, k, verbose = 0):
+        D = FeatureSimilarityMatrices(self, review)
         T = len(review.sentences)-1
-        for state in range(self.numStates):
-            w += getAlpha(self, T, state)
+        w = sum( self.getAlpha(T, D))
 
         gamma = []
         for t in range(T):
             score = 0.0
+            alpha = self.getAlpha(t, D)
+            beta =  self.getBeta(t, D)
             for state in range(self.numStates):
-                if (j % 2): #odd -> summary state of HMM 
-                    score -= getAlpha(self, t, state, review)*getBeta(self, t, T, review)/w
-            gamma.append[score]
+                if (state % 2): #odd -> summary state of HMM
+                    score -= float(alpha[state])*float(beta[state])/float(w)
+            gamma.append(score)
+        
+        bestIndices = np.array(gamma).argsort()
 
-        sentenceRankings = np.array[gamma]
-        bestIndices = sentenceRankings.argsort()
+        print bestIndices
         for i in range(k):
             print review.sentences[bestIndices[i]].text
-            
-            
-    #obtain D_o matrix - need better intution about what this really does
-    def getD_o(self, review, t):
-        D_o = np.asmatrix(np.zeros(self.numStates, self.numStates))
-        dof = self.numFeatures
-        for state in range(numStates):
-            phiM = np.asmatrix(review.sentences[t].phi).T
-            arg = phiM -self.B.mu[state]
-            D_o[state,state] = 1 - chi2.cdf(arg.T*numpy.linalg.inv(self.B.sigma[state])*arg, dof)
-        return D_o
 
     #recursively compute alpha score    
-    def getAlpha(self, t, state, review):
-        if t == 0: return self.p[0][state]
+    def getAlpha(self, t, D):
+        if t == 0: return np.asmatrix(self.p).T
         else:
-            return getD_o(self, review, t)*np.asmatrix(self.M).T*getAlpha(self, t-1, state, review)
+            return D.get(t)*np.asmatrix(self.M).T*self.getAlpha(t-1, D)
 
     #recursively compute beta score
-    def getBeta(self, t, T, review):
-        if t == T: return 1
+    def getBeta(self, t, D):
+        if t == D.len()-1: return np.ones( (self.numStates, 1) )
         else:
-            return np.asmatrix(self.M)*getD_o(self, review, t)*getBeta(self, t+1, T, review)
+            return np.asmatrix(self.M)*D.get(t)*self.getBeta(t+1, D)
 
     
 class MultivariableNormals(object):
     def __init__(self, numStates, numFeatures):
         self.mu = []
-        self.sigma = []
+        self.sigma = np.asmatrix(np.zeros( (numFeatures, 1) ) )
         self.counts = []
+        self.numStates = numStates
+        self.numFeatures = numFeatures
         for i in range(numStates):
             self.counts.append(0)
             self.mu.append(np.asmatrix(np.zeros( (numFeatures, 1) ) ) )
-            self.sigma.append(np.asmatrix(np.zeros( (numFeatures, 1) ) ) )
 
     def updateMu(self, state, phi):
         phiM = np.asmatrix(phi).T
@@ -95,21 +87,47 @@ class MultivariableNormals(object):
     def updateSigma(self, state, phi):
         temp = np.asmatrix(phi).T - self.mu[state]
         cov = temp * temp.T 
-        self.sigma[state] = self.sigma[state] + cov
+        self.sigma = self.sigma + cov
 
     def normalizeSigma(self):
-        for state in range( len(self.counts) ):
-            self.sigma[state] = self.sigma[state] / self.counts[state]
+        self.sigma = self.sigma / sum(self.counts)
 
     def printResults(self):
-        for state in range( len(self.counts) ):
+        print "Sigma: "
+        print self.sigma
+        for state in range( self.numStates ):
             print "State %d : Counts %d" % (state, self.counts[state])
             print "Feature Mu: "
             print self.mu[state]
             print ""
-            #print "Feature Sigma "
-            #print self.sigma[state]
-                
+
+class FeatureSimilarityMatrices(object):
+    def __init__(self, hmm, review):
+        self.D = []
+        Sinv = np.linalg.inv(hmm.B.sigma)
+        
+        for sentence in review.sentences:
+            D_o = np.asmatrix(np.zeros( (hmm.numStates, hmm.numStates) ) )
+            dof = hmm.numFeatures
+            for state in range(hmm.numStates):
+                phiM = np.asmatrix(sentence.phi).T
+                arg = phiM - hmm.B.mu[state]
+                D_o[state,state] = 1 - chi2.cdf(arg.T*Sinv*arg, dof)
+
+            self.D.append(D_o)
+
+    def len(self):
+        return len(self.D)
+
+    def get(self, sentence):
+        return self.D[sentence]
+
+    def printResults(self):
+        print "Object Contains %d Matrices" % len(self.D)
+        for i in range(len(self.D)):
+            print self.D[i]
+            print ""
+                            
 
 #come up with state transition matrix from labeled data, as well
 #as p distribution of initial sentences, output in a tuple of (M, p)
@@ -181,11 +199,3 @@ def norm(A):
 #create function to query whether a sentence is a summary sentence or not
 def getSummaryFunc(summaryList):
     return lambda x: x in summaryList
-    
-    
-    
-
-markovModel = trainHMM("Labeled_Reviews.json", 3, 4)
-print markovModel.M
-print markovModel.p
-markovModel.B.printResults()
