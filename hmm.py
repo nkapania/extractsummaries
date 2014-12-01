@@ -12,7 +12,7 @@ Requires numpy package to be installed.
 import utils
 import YelpReview
 import numpy as np
-import scipy.stats import chi2
+from scipy.stats import chi2
 
 class HiddenMarkovModel(object):
     def __init__(self, numStates, numFeatures):
@@ -136,7 +136,8 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
         review = utils.getReview(reviewID)
         assert numSentences == len(review.sentences)  # sanity check that labeled review is the same as the sentence in the review object
 
-        #get initial state and increment p array        
+        #get initial state and increment p array
+        print isSummary(0)
         state = 1 if isSummary(0) else 0
         hmm.incrementP(state)
 
@@ -185,7 +186,7 @@ def getSummaryFunc(summaryList):
     
     
 
-markovModel = trainHMM("Labeled_Reviews.json", 3, 4)
-print markovModel.M
-print markovModel.p
-markovModel.B.printResults()
+markovModel = trainHMM("Labeled_Reviews_1100-1156.json", 3, 4)
+#print markovModel.M
+#print markovModel.p
+#markovModel.B.printResults()
