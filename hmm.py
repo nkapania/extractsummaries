@@ -211,10 +211,8 @@ def norm(A):
 
 #create function to query whether a sentence is a summary sentence or not
 def getSummaryFunc(summaryList):
-<<<<<<< HEAD
     return lambda x: x in summaryList
-=======
-    return lambda x: x in summaryList
+
     
 
 markovModel = trainHMM("Labeled_Reviews_1100-1156.json", 3, 4)
@@ -223,5 +221,3 @@ print markovModel.p
 markovModel.B.printResults()
 r = utils.getReview("27i1VkdOnMd5VTK4fQqoGQ")
 markovModel.summarize(r, 3)
-
->>>>>>> ae01138bf17710c88b1cc1c8a1b5e699ed5eb42d
