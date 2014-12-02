@@ -197,3 +197,6 @@ markovModel = trainHMM("Labeled_Reviews_1100-1156.json", 3, 4)
 print markovModel.M
 print markovModel.p
 markovModel.B.printResults()
+r = utils.getReview("27i1VkdOnMd5VTK4fQqoGQ")
+markovModel.summarize(r, 3)
+

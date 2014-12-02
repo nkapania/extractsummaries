@@ -110,6 +110,18 @@ def getReview(id):
     handle.close()
     return r
 
+def getAverageSummaryLength(corpus):
+    reviewDict = loadLabeledReviews(corpus)
+    numReviews = 0
+    numSummarySentences = 0
+    for key, value in reviewDict.items():
+        try:
+            numSummarySentences += len(value)
+            numReviews += 1
+        except TypeError: continue
+
+    print numSummarySentences, numReviews, numSummarySentences/numReviews
+
 
 '''
 There are 1,125,458 total reviews. Of those 706,646 reviews are listed under the
@@ -142,4 +154,6 @@ def getOccurancesFromCorpus(termCounter):
 
 def getFreqFromCorpus(term):
     return corpus[term]
+
+#getAverageSummaryLength("Labeled_Reviews_1158-1200.json")
 
