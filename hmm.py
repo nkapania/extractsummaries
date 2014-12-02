@@ -36,8 +36,8 @@ class HiddenMarkovModel(object):
     #given a hidden markov model and YelpReview object, summarize it in k sentences 
     def summarize(self, review, k, verbose = 0):
         D = FeatureSimilarityMatrices(self, review)
-        T = len(review.sentences)-1
-        w = sum( self.getAlpha(T, D))
+        T = len(review.sentences)
+        w = sum( self.getAlpha(T-1, D))
 
         gamma = []
         for t in range(T):
@@ -86,7 +86,7 @@ class MultivariableNormals(object):
 
     def updateSigma(self, state, phi):
         temp = np.asmatrix(phi).T - self.mu[state]
-        cov = temp * temp.T 
+        cov = temp * temp.T
         self.sigma = self.sigma + cov
 
     def normalizeSigma(self):
@@ -158,11 +158,12 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
         state = 1 if isSummary(0) else 0
         hmm.incrementP(state)
 
-        for i in range(1, numSentences):
+        for i in range(numSentences):
             hmm.B.updateMu(state, review.sentences[i].phi)
-            newState = getSucc(state, isSummary(i), N)
-            hmm.incrementM(state, newState) 
-            state = newState
+            if i < numSentences - 1:
+                newState = getSucc(state, isSummary(i+1), N)
+                hmm.incrementM(state, newState) 
+                state = newState
 
     #second pass - feature covariance matrices
     for reviewID in reviews.keys():
@@ -170,9 +171,10 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
         review = utils.getReview(reviewID)
 
         state = 1 if isSummary(0) else 0
-        for i in range(1, len(review.sentences)):
+        for i in range(numSentences):
             hmm.B.updateSigma(state, review.sentences[i].phi)
-            state = getSucc(state, isSummary(i), N)
+            if i < numSentences - 1:
+                state = getSucc(state, isSummary(i+1), N)
 
     #normalize
     hmm.normalize()
@@ -193,7 +195,8 @@ def getSucc(state, isSummary, N):
 def norm(A):
     numRows, numCols = A.shape
     for i in range(0, numRows): #iterate through each row
-        A[i] = A[i]/sum(A[i])
+        if sum(A[i]) != 0:
+            A[i] = A[i]/sum(A[i])
     return A
 
 #create function to query whether a sentence is a summary sentence or not
