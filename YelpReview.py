@@ -30,13 +30,13 @@ class Sentence(object):
     # 5) Document term probability
     def __init__(self, index, numTerms, baselineProb, documentProb, text):
         # features defined here
-        self.index = index
-        if (index == 0): self.pos = 1
-        else: self.pos = 2
-        self.numTerms = math.log10(numTerms + 1)
+        #self.index = index
+        #if (index == 0): self.pos = 1
+        #else: self.pos = 2
+        self.numTerms = numTerms + 1
         self.baselineProb = baselineProb
         self.documentProb = documentProb
-        self.phi = [self.pos, self.numTerms, self.baselineProb, self.documentProb]
+        self.phi = [self.numTerms, self.baselineProb, self.documentProb]
         self.text = text
 
 class Review(object):
@@ -92,8 +92,8 @@ class Review(object):
         print "Number of terms in baseline", self.baselineFreq
         for k, v in self.terms.items(): print k, v
         for sentence in self.sentences:
-            print "Position", sentence.pos
-            print "Term Probability", sentence.numTerms
+            #print "Position", sentence.pos
+            print "Number of Terms", sentence.numTerms
             print "Baseline Probability", sentence.baselineProb
             print "Document Probability", sentence.documentProb
 
