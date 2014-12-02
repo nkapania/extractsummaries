@@ -33,10 +33,10 @@ if __name__ == '__main__':
     endInd = int(sys.argv[2])
 
     # Pulls in the first 50 restaurant IDs
-    restaurantIDs = utils.getRestaurantIDs(50)
+    restaurantIDs = set(utils.getRestaurantIDs())
 
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-    reviewJSON = r"yelp_academic_dataset_review.json"
+    reviewJSON = r"../yelp_academic_dataset_review.json"
     handle = open(reviewJSON, 'r')
 
     count = 0
@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 else: reviewDict[id] = sentenceIndex
                     
                 # Open, write, close to save intermediate progress
-                output = open("Labeled_Reviews.json", 'a')
+                output = open("Labeled_Reviews.json", 'w')
                 json.dump(reviewDict, output, indent=4)
                 output.close()
 
