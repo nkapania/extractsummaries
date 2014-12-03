@@ -28,7 +28,7 @@ class Sentence(object):
     # 3) Number of terms in the sentence.
     # 4) Baseline term probability
     # 5) Document term probability
-    def __init__(self, index, numTerms, baselineProb, documentProb, text):
+    def __init__(self, index, numTerms, baselineProb, documentProb, ssProb, text):
         # features defined here
         #self.index = index
         #if (index == 0): self.pos = 1
@@ -36,7 +36,9 @@ class Sentence(object):
         self.numTerms = numTerms + 1
         self.baselineProb = baselineProb
         self.documentProb = documentProb
-        self.phi = [self.numTerms, self.baselineProb, self.documentProb]
+        self.ssProb = ssProb
+        self.phi = [self.numTerms, self.baselineProb, self.documentProb, self.ssProb]
+        #self.phi = [self.numTerms, self.baselineProb, self.documentProb]
         self.text = text
 
 class Review(object):
@@ -51,6 +53,7 @@ class Review(object):
         self.terms = collections.Counter()
         self.documentFreq = 0
         self.baselineFreq = 0
+        self.ssFreq = 0
     
     # Function: ProcessTerms
     # ----------------------
@@ -66,6 +69,7 @@ class Review(object):
             for token in tokens: self.terms[token] += 1
         self.documentFreq = float(len(list( self.terms.elements() )))
         self.baselineFreq = float(utils.getOccurancesFromCorpus(self.terms))
+        self.ssFreq = float(utils.getOccurancesFromCorpus_SS(self.terms)) + len(self.terms)
 
     # Function: ProcessSentences
     # --------------------------
@@ -75,12 +79,15 @@ class Review(object):
             terms = utils.processSentenceText(reviewText[i])
             baselineProb = 0
             documentProb = 0
+            ssProb = 0
             for term in terms:
                 baselineTermFreq = utils.getFreqFromCorpus(term)
                 baselineProb += math.log(baselineTermFreq/self.baselineFreq)
                 docTermFreq = self.terms[term]
                 documentProb += math.log(docTermFreq/self.documentFreq)
-            s = Sentence(i, len(terms), baselineProb, documentProb, reviewText[i])
+                ssTermFreq = utils.getFreqFromCorpus_SS(term) + 1
+                ssProb += math.log(ssTermFreq/self.ssFreq)
+            s = Sentence(i, len(terms), baselineProb, documentProb, ssProb, reviewText[i])
             self.sentences.append(s)
 
     # Function: PrintContents

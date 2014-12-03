@@ -16,9 +16,9 @@ import string
 import YelpReview
 
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_business.json HERE
-businessJSON = r"yelp_academic_dataset_business.json"
+businessJSON = r"../yelp_academic_dataset_business.json"
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-reviewJSON = r"yelp_academic_dataset_review.json"
+reviewJSON = r"../yelp_academic_dataset_review.json"
 
 
 '''
@@ -148,12 +148,30 @@ def createRestaurantCorpus():
     handle.close()
 
 corpus = loadLabeledReviews("corpus.json")
+corpus_ss = loadLabeledReviews("corpus_ss.json")
 
 def getOccurancesFromCorpus(termCounter):
     total = 0
     for term in termCounter: total += corpus[term]
     return total
 
-def getFreqFromCorpus(term):
-    return corpus[term]
+def getOccurancesFromCorpus_SS(termCounter):
+    total = 0
+    for term in termCounter:
+        try:
+            freq = corpus_ss[term]
+        except KeyError: freq = 0
+        total += freq
+    return total
+
+def getFreqFromCorpus(term): return corpus[term]
+
+def getFreqFromCorpus_SS(term):
+    try:
+        return corpus_ss[term]
+    except KeyError: return 0
+
+
+
+
 
