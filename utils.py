@@ -16,9 +16,9 @@ import string
 import YelpReview
 
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_business.json HERE
-businessJSON = r"../yelp_academic_dataset_business.json"
+businessJSON = r"yelp_academic_dataset_business.json"
 # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-reviewJSON = r"../yelp_academic_dataset_review.json"
+reviewJSON = r"yelp_academic_dataset_review.json"
 
 
 '''

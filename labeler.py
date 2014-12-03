@@ -36,7 +36,7 @@ if __name__ == '__main__':
     restaurantIDs = set(utils.getRestaurantIDs())
 
     # REPLACE WITH YOUR FILE-PATH TO yelp_academic_dataset_review.json HERE
-    reviewJSON = r"../yelp_academic_dataset_review.json"
+    reviewJSON = r"yelp_academic_dataset_review.json"
     handle = open(reviewJSON, 'r')
 
     count = 0
