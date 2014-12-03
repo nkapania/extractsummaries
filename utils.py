@@ -66,8 +66,6 @@ def loadLabeledReviews(jsonFilename):
     handle.close()
     return reviewDict
 
-corpus = loadLabeledReviews("corpus.json")
-
 
 # Remove punctuation and whitespace from sentences in review.
 # Return the sentences in a list.
@@ -125,10 +123,10 @@ def getAverageSummaryLength(corpus):
 
 '''
 There are 1,125,458 total reviews. Of those 706,646 reviews are listed under the
-category Restaurants.
+category Restaurants. This function builds a corpus.json file that is a counter
+of all the terms in the 706,646 reviews excluding punctuation and stop words.
 '''
-def getRestaurantCorpus():
-    
+def createRestaurantCorpus():
     # convert to set for faster membership testing
     restaurantIDs = set(getRestaurantIDs())
     corpus = collections.Counter()
@@ -144,8 +142,12 @@ def getRestaurantCorpus():
                 if token not in STOPWORDS: corpus[token] += 1
 
     handle.close()
-    return corpus
 
+    handle = open("corpus.json", 'w')
+    json.dump(corpus, handle, indent=2)
+    handle.close()
+
+corpus = loadLabeledReviews("corpus.json")
 
 def getOccurancesFromCorpus(termCounter):
     total = 0
@@ -154,6 +156,4 @@ def getOccurancesFromCorpus(termCounter):
 
 def getFreqFromCorpus(term):
     return corpus[term]
-
-#getAverageSummaryLength("Labeled_Reviews_1158-1200.json")
 

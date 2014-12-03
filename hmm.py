@@ -37,7 +37,7 @@ class HiddenMarkovModel(object):
     def summarize(self, review, k, verbose = 0):
         D = FeatureSimilarityMatrices(self, review)
         T = len(review.sentences)
-        w = sum( self.getAlpha(T-1, D))
+        w = sum( self.getAlpha(T-1, D) )
 
         gamma = []
         for t in range(T):
@@ -48,24 +48,25 @@ class HiddenMarkovModel(object):
                 if (state % 2): #odd -> summary state of HMM
                     score -= float(alpha[state])*float(beta[state])/float(w)
             gamma.append(score)
-        
+
         bestIndices = np.array(gamma).argsort()
 
-        print bestIndices
-        for i in range(k):
-            print review.sentences[bestIndices[i]].text
+        indices = sorted(bestIndices[:k])
+        for ind in indices: print review.sentences[ind].text
+        return indices
 
     #recursively compute alpha score    
     def getAlpha(self, t, D):
+        #if t == 0: return np.asmatrix(self.p).T
         if t == 0: return np.asmatrix(self.p).T
         else:
-            return D.get(t)*np.asmatrix(self.M).T*self.getAlpha(t-1, D)
+            return D.get(t) * np.asmatrix(self.M).T * self.getAlpha(t-1, D)
 
     #recursively compute beta score
     def getBeta(self, t, D):
         if t == D.len()-1: return np.ones( (self.numStates, 1) )
         else:
-            return np.asmatrix(self.M)*D.get(t)*self.getBeta(t+1, D)
+            return np.asmatrix(self.M) * D.get(t+1) * self.getBeta(t+1, D)
 
     
 class MultivariableNormals(object):
@@ -149,10 +150,8 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
     #first pass - transition matrix M, probability distribution p, feature means.
     for reviewID in reviews.keys():
         print "Processing Review: %s" % reviewID
-        #numSentences = reviews[reviewID].pop(0) #legacy features - now we have YelpReview implemented so can remove this. Will required modifying labeled_reviews.json
         
         review = utils.getReview(reviewID)
-        #assert numSentences == len(review.sentences)  # sanity check that labeled review is the same as the sentence in the review object
 
         numSentences = len(review.sentences)
         try: numSummarySentences = len(reviews[reviewID])
