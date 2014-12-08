@@ -1,13 +1,26 @@
 #!/usr/bin/python
 
-import random
+import json
+import utils
+import sys
 import collections
 import math
 from sets import Set
-import sys
 from collections import Counter
-from util import *
 
+def load(reviewJSON):
+    reviewDict = utils.loadLabeledReviews(reviewJSON)
+    reviewList = []
+    for key, value in reviewDict.items():
+        print "On Review", key
+        YelpReview = utils.getReview(key)
+        for i in range( len(YelpReview.sentences) ):
+            if i in value:
+                reviewList.append( (YelpReview.sentences[i].text, 1) )
+            else:
+                reviewList.append( (YelpReview.sentences[i].text, -1) )
+    return reviewList
+        
 def loadStopWords(stopWordFilename):
     handle = open(stopWordFilename, 'r')
     stopWords = [line.strip() for line in handle.readlines()]
@@ -26,7 +39,7 @@ def extractWordFeatures(x):
     stopWords = loadStopWords("stopWords.txt")
     
     for word in words:
-        if word in stopWords:
+        if word.lower() in stopWords:
             continue
         phi[word.lower()] = phi.get(word.lower(), 0) + 1
     return phi
