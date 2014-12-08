@@ -5,15 +5,18 @@ import pickle
 import utils
 import YelpReview
 import utils
+import naiveBayes
 
 
 HMM_MODEL_FILE = "hmm_model"
+NB_MODEL_FILE = "nb_model"
 
 def saveModel(corpusJSON, N, numFeatures):
-    model = hmm.trainHMM(corpusJSON, N, numFeatures)
+    nb = naiveBayes.loadNB(NB_MODEL_FILE)
+    model = hmm.trainHMM(corpusJSON, nb, N, numFeatures)
     with open(HMM_MODEL_FILE, 'wb') as output:
         pickle.dump(model, output, pickle.HIGHEST_PROTOCOL)
-
+       
 def loadModel():
     with open(HMM_MODEL_FILE, 'rb') as input:
         hmmModel = pickle.load(input)
@@ -68,42 +71,28 @@ def calculateF1(tp, fp, tn):
     F1 = 2 * precision * recall / (precision + recall)
     return F1
 
+
+
 #filterReviews("Labeled_Reviews_Sean.json")
 #removeFirstElement("Labeled_Reviews_Sean.json")
 #createSummarySentenceTermCorpus()
 
-saveModel("Labeled_Reviews_All.json", 3, 4)
+#saveModel("Labeled_Reviews_All.json", 3, 5)
+
+naiveBayesModel = naiveBayes.loadNB(NB_MODEL_FILE)
 model = loadModel()
 print model.M
 print model.p
 model.B.printResults()
-#reviews = utils.loadLabeledReviews("Labeled_Reviews_1158-1200.json")
+reviews = utils.loadLabeledReviews("Labeled_Reviews_1158-1200.json")
 
-"""
-r = utils.getReview("EaXxcrGtsNRHHBgBHSYuZg")
-gold = reviews["EaXxcrGtsNRHHBgBHSYuZg"]
-predicted = model.summarize(r, len(gold))
-print predicted
-print "Labeled indices", gold
-tp = 0.0
-fp = 0.0
-fn = 0.0
-for i in predicted:
-    if i in gold: tp += 1
-    else: fp += 1
-for i in gold:
-    if i not in predicted: fn += 1
-print "tp: %d. fp: %d, fn: %d" % (tp, fp, fn)
-print calculateF1(tp, fp, fn)
-
-"""
 count = 0
-totalF1 = 0
-totalTP = 0.0
-totalFP = 0.0
-totalFN = 0.0
+TP = 0.0
+FP = 0.0
+FN = 0.0
+
 for key, value in reviews.items():
-    r = utils.getReview(key)
+    r = utils.getReview(key, naiveBayesModel)
     "value", value
     try:
         predicted = model.summarize(r, len(value))
@@ -117,16 +106,13 @@ for key, value in reviews.items():
             else: fp += 1
         for i in value:
             if i not in predicted: fn += 1
+        TP += tp
+        FP += fp
+        FN += fn
         print "tp: %d. fp: %d, fn: %d" % (tp, fp, fn)
+        print "TP: %d. FP: %d, FN: %d" % (TP, FP, FN)
+
         
-        precision = tp/(tp + fp)
-        recall = tp/(tp + fn)
-        totalTP += tp
-        totalFP += fp
-        totalFN += fn
-        F1 = 2 * precision * recall / (precision + recall)
-        totalF1 += F1
-        print "F1 score: ", F1
     except ZeroDivisionError:
         print "ZeroDivisionError Encountered with review ", key, "\n"
         count += 1
@@ -136,9 +122,12 @@ print count
 used = len(reviews) - count
 print used
 
-totalP = totalTP/(totalTP + totalFP)
-totalR = totalTP/(totalTP + totalFN)
-print totalP, totalR
-F1 = 2 * totalP * totalR / (totalP + totalR)
+print FP
+print FN
+
+P = TP/(TP + FP)
+R = TP/(TP + FN)
+print P, R
+F1 = 2 * P * R / (P + R)
 print "Total F1", F1
 

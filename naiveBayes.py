@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import json
 import utils
 import sys
@@ -7,6 +6,7 @@ import collections
 import math
 from sets import Set
 from collections import Counter
+import pickle
 
 def load(reviewJSON):
     reviewDict = utils.loadLabeledReviews(reviewJSON)
@@ -82,7 +82,28 @@ def getConditionals(listOfPhi, featureSet):
 def getPrior(posData, negData):
     return float( len(posData)) / ( len(posData) + len(negData))
 
-def classify(testData, py, posConditionals, negConditionals, featureExtractor, featureSet):
+def classify(naiveBayesModel, text, featureExtractor = extractWordFeatures):
+    py, posConditionals, negConditionals, featureSet = naiveBayesModel #unpack tuple
+    valPos = math.log(py)
+    valNeg = math.log(1-py)
+    reviewFeatures = featureExtractor(text)
+    for feature in reviewFeatures.keys():
+        if feature not in featureSet:
+            posProb = 1.0
+            negProb = 1.0
+        else:
+            posProb = posConditionals[feature]
+            negProb = negConditionals[feature]
+
+        counts = max(1, reviewFeatures[feature])
+        valPos += counts * math.log ( posProb )
+        valNeg += counts * math.log ( negProb )
+
+    return 1 if valPos > valNeg else 0 
+    
+
+def classifyDataset(testData, naiveBayesModel, featureExtractor = extractWordFeatures):
+    py, posConditionals, negConditionals, featureSet = naiveBayesModel #unpack tuple
 
     tp = 0
     fp = 0
@@ -90,37 +111,20 @@ def classify(testData, py, posConditionals, negConditionals, featureExtractor, f
     fn = 0
     
     for review, trueLabel in testData:
-
-        if trueLabel == -1: trueLabel = 0
-        
-        valPos = math.log(py)
-        valNeg = math.log(1-py)
-        reviewFeatures = featureExtractor(review)
-        for feature in reviewFeatures.keys():
-            if feature not in featureSet:
-                posProb = 1.0
-                negProb = 1.0
-            else:
-                posProb = posConditionals[feature]
-                negProb = negConditionals[feature]
-
-            counts = max(1, reviewFeatures[feature])
-            valPos += counts * math.log( posProb )
-            valNeg += counts * math.log( negProb )
-
-        predictedLabel = 1 if valPos > valNeg else 0
+        predictedLabel = classify(review, py, posConditionals, negConditionals, featureSet)
         outcome = "CORRECT" if predictedLabel == trueLabel else "INCORRECT"
         if predictedLabel and trueLabel: tp += 1
         if predictedLabel and not  trueLabel: fp += 1
         if not predictedLabel and not trueLabel: tn += 1
         if not predictedLabel and trueLabel: fn += 1
+                
     prec = float(tp)/(tp+fp)
     rec  = float(tp)/(tp+fn)
     F1 = 2*prec*rec/(prec+rec)
     print (tp, fp, tn, fn)
     print (prec, rec, F1)            
         
-        #print "valPos = %d  valNeg = %d Prediction = %d Label = %d (%s)" %(valPos, valNeg, predictedLabel, trueLabel, outcome)
+   #print "valPos = %d  valNeg = %d Prediction = %d Label = %d (%s)" %(valPos, valNeg, predictedLabel, trueLabel, outcome)
     
 
 def extractCharacterFeatures(n):
@@ -140,6 +144,23 @@ def extractCharacterFeatures(n):
         return phi
         
     return extract
+
+def saveNB(corpusJSON, NB_MODEL_FILE):
+    trainExamples = load(corpusJSON)
+    posData =  getListOfPhi(trainExamples, extractWordFeatures, 1)
+    negData =  getListOfPhi(trainExamples, extractWordFeatures, -1)
+    featureSet = getAllFeatures(posData, negData)
+    posConditional = getConditionals(posData, featureSet)
+    negConditional = getConditionals(negData, featureSet)
+    py = getPrior(posData, negData)
+    model = (py, posConditional, negConditional, featureSet)
+    with open(NB_MODEL_FILE, 'wb') as output:
+       pickle.dump(model, output, pickle.HIGHEST_PROTOCOL)
+
+def loadNB(NB_MODEL_FILE):
+    with open(NB_MODEL_FILE, 'rb') as input:
+        nbModel = pickle.load(input)
+    return nbModel
 
 
     

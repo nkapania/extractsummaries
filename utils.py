@@ -92,7 +92,7 @@ def processSentenceText(text):
 Look through all reviews until reviewID matches input ID. Build review object
 from matching review
 '''
-def getReview(id):
+def getReview(id, naiveBayesModel = 0):
     handle = open(reviewJSON, 'r')
     # Hardcoded to a document containing most common stop words.
     
@@ -102,7 +102,7 @@ def getReview(id):
             reviewText = processReviewText(review["text"])
             r = YelpReview.Review(id)
             r.ProcessTerms(reviewText, STOPWORDS)
-            r.ProcessSentences(reviewText)
+            r.ProcessSentences(reviewText, naiveBayesModel)
             break
 
     handle.close()

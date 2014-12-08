@@ -17,6 +17,7 @@ Keys are the tokens, values are the frequencies of the tokens.
 import collections
 import math
 import utils
+import naiveBayes
 
 class Sentence(object):
     
@@ -28,7 +29,7 @@ class Sentence(object):
     # 3) Number of terms in the sentence.
     # 4) Baseline term probability
     # 5) Document term probability
-    def __init__(self, index, numTerms, baselineProb, documentProb, ssProb, text):
+    def __init__(self, index, numTerms, baselineProb, documentProb, ssProb, nbResult, text):
         # features defined here
         #self.index = index
         #if (index == 0): self.pos = 1
@@ -37,7 +38,8 @@ class Sentence(object):
         self.baselineProb = baselineProb
         self.documentProb = documentProb
         self.ssProb = ssProb
-        self.phi = [self.numTerms, self.baselineProb, self.documentProb, self.ssProb]
+        self.nbResult = nbResult
+        self.phi = [self.numTerms, self.baselineProb, self.documentProb, self.ssProb, self.nbResult]
         #self.phi = [self.numTerms, self.baselineProb, self.documentProb]
         self.text = text
 
@@ -74,8 +76,13 @@ class Review(object):
     # Function: ProcessSentences
     # --------------------------
     # Builds a list of Sentence Objects.
-    def ProcessSentences(self, reviewText):
+    def ProcessSentences(self, reviewText, naiveBayesModel= 0):
         for i in range(len(reviewText)):
+            if not naiveBayesModel:
+                nbResult = float('nan')
+            else:
+                nbResult = naiveBayes.classify(naiveBayesModel, reviewText[i])
+                 
             terms = utils.processSentenceText(reviewText[i])
             baselineProb = 0
             documentProb = 0
@@ -87,7 +94,8 @@ class Review(object):
                 documentProb += math.log(docTermFreq/self.documentFreq)
                 ssTermFreq = utils.getFreqFromCorpus_SS(term) + 1
                 ssProb += math.log(ssTermFreq/self.ssFreq)
-            s = Sentence(i, len(terms), baselineProb, documentProb, ssProb, reviewText[i])
+
+            s = Sentence(i, len(terms), baselineProb, documentProb, ssProb, nbResult,  reviewText[i])
             self.sentences.append(s)
 
     # Function: PrintContents
