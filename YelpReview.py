@@ -65,6 +65,7 @@ class Review(object):
             # Split sentence on whitespace to parse individual tokens.
             # Ignore tokens that are stop words.
             # Only store lowercase version of tokens without any punctuation.
+            #if len(sentence.split()) <= 3: continue
             tokens = utils.processSentenceText( sentence )
             for token in tokens: self.terms[token] += 1
         self.documentFreq = float(len(list( self.terms.elements() )))
@@ -76,6 +77,7 @@ class Review(object):
     # Builds a list of Sentence Objects.
     def ProcessSentences(self, reviewText):
         for i in range(len(reviewText)):
+            #if len(reviewText[i].split()) <= 3: continue
             terms = utils.processSentenceText(reviewText[i])
             baselineProb = 0
             documentProb = 0

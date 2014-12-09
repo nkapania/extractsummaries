@@ -68,16 +68,16 @@ def calculateF1(tp, fp, tn):
     F1 = 2 * precision * recall / (precision + recall)
     return F1
 
-#filterReviews("Labeled_Reviews_Sean.json")
+#filterReviews("Labeled_Reviews_All.json")
 #removeFirstElement("Labeled_Reviews_Sean.json")
-#createSummarySentenceTermCorpus()
+createSummarySentenceTermCorpus()
 
 saveModel("Labeled_Reviews_All.json", 3, 4)
 model = loadModel()
-print model.M
-print model.p
-model.B.printResults()
-#reviews = utils.loadLabeledReviews("Labeled_Reviews_1158-1200.json")
+#print model.M
+#print model.p
+#model.B.printResults()
+reviews = utils.loadLabeledReviews("Labeled_Reviews_1158-1200.json")
 
 """
 r = utils.getReview("EaXxcrGtsNRHHBgBHSYuZg")
