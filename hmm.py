@@ -136,10 +136,10 @@ class FeatureSimilarityMatrices(object):
 #M is a (2N + 1) x (2N + 1) Markov transition matrix, where N is number of summary sentences in HMM
 #model, p is a (2*N + 1) distribution.
 
-def trainHMM(labeledReviews, N = 6, numFeatures = 4):
+def trainHMM(labeledReviews, naiveBayesModel, N = 6, numFeatures = 5):
 
     #get number of states from number of summary sentences N
-    numStates = 2*N+1
+    numStates = 2 if N == 1 else 2*N+1 #N = 1 is special case - simple two state model
 
     #initialize hidden markov model                 
     hmm = HiddenMarkovModel(numStates, numFeatures)
@@ -151,7 +151,7 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
     for reviewID in reviews.keys():
         print "Processing Review: %s" % reviewID
         
-        review = utils.getReview(reviewID)
+        review = utils.getReview(reviewID, naiveBayesModel)
 
         numSentences = len(review.sentences)
         try: numSummarySentences = len(reviews[reviewID])
@@ -172,7 +172,7 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
     #second pass - feature covariance matrices
     for reviewID in reviews.keys():
         print "Processing Review (Pass 2): %s" % reviewID
-        review = utils.getReview(reviewID)
+        review = utils.getReview(reviewID, naiveBayesModel)
         
         numSentences = len(review.sentences)
         try: numSummarySentences = len(reviews[reviewID])
@@ -192,6 +192,11 @@ def trainHMM(labeledReviews, N = 6, numFeatures = 4):
 
 #get successor state given current state, whether next sentence is summary or not, and number of summary sentences
 def getSucc(state, isSummary, N):
+
+    if N == 1:  #special case - simple two state Markov Model
+        return 1 if isSummary else 0
+    
+    
     if state == 2*N - 1:  #in last summary state
         return state+1 #only one transition according to conroy and o'leary paper, but this should be reconsidered
 
