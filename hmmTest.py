@@ -11,8 +11,7 @@ import naiveBayes
 HMM_MODEL_FILE = "hmm_model"
 NB_MODEL_FILE = "nb_model"
 
-def saveModel(corpusJSON, N, numFeatures):
-    nb = naiveBayes.loadNB(NB_MODEL_FILE)
+def saveModel(corpusJSON, N, numFeatures, nb):
     model = hmm.trainHMM(corpusJSON, nb, N, numFeatures)
     with open(HMM_MODEL_FILE, 'wb') as output:
         pickle.dump(model, output, pickle.HIGHEST_PROTOCOL)
@@ -72,15 +71,14 @@ def calculateF1(tp, fp, tn):
     return F1
 
 
-
-#filterReviews("Labeled_Reviews_Sean.json")
-#removeFirstElement("Labeled_Reviews_Sean.json")
-#createSummarySentenceTermCorpus()
-
-#saveModel("Labeled_Reviews_All.json", 3, 5)
-
+utils.createRestaurantCorpus()
+createSummarySentenceTermCorpus()
+naiveBayes.saveNB("Labeled_Reviews_All.json", NB_MODEL_FILE)
 naiveBayesModel = naiveBayes.loadNB(NB_MODEL_FILE)
+saveModel("Labeled_Reviews_All.json", 3, 5, naiveBayesModel )
 model = loadModel()
+
+
 print model.M
 print model.p
 model.B.printResults()
