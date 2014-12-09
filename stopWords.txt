@@ -7,9 +7,7 @@ at
 be
 by
 for
-from
 has
-he
 in
 is
 it
@@ -19,11 +17,6 @@ on
 that
 the
 to
-was
-were
-will
-with
-i
 u
 s
 t
