@@ -71,8 +71,8 @@ def calculateF1(tp, fp, tn):
     return F1
 
 
-utils.createRestaurantCorpus()
-createSummarySentenceTermCorpus()
+#utils.createRestaurantCorpus()
+#createSummarySentenceTermCorpus()
 naiveBayes.saveNB("Labeled_Reviews_All.json", NB_MODEL_FILE)
 naiveBayesModel = naiveBayes.loadNB(NB_MODEL_FILE)
 saveModel("Labeled_Reviews_All.json", 3, 5, naiveBayesModel )
