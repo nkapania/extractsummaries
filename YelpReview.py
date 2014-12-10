@@ -84,7 +84,7 @@ class Review(object):
                 nbResult = float('nan')
             else:
                 nbResult = naiveBayes.classify(naiveBayesModel, reviewText[i])
-                             terms = utils.processSentenceText(reviewText[i])
+            terms = utils.processSentenceText(reviewText[i])
             baselineProb = 0
             documentProb = 0
             ssProb = 0

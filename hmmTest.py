@@ -71,11 +71,10 @@ def calculateF1(tp, fp, tn):
     return F1
 
 #filterReviews("Labeled_Reviews_All.json")
-#removeFirstElement("Labeled_Reviews_Sean.json")
-createSummarySentenceTermCorpus()
+#removeFirstElement("Labeled_Reviews_1100-1156.json")
+#createSummarySentenceTermCorpus()
 
 #utils.createRestaurantCorpus()
-#createSummarySentenceTermCorpus()
 naiveBayes.saveNB("Labeled_Reviews_All.json", NB_MODEL_FILE)
 naiveBayesModel = naiveBayes.loadNB(NB_MODEL_FILE)
 saveModel("Labeled_Reviews_All.json", 3, 5, naiveBayesModel )
@@ -84,11 +83,7 @@ model = loadModel()
 #print model.p
 #model.B.printResults()
 
-
-print model.M
-print model.p
-model.B.printResults()
-reviews = utils.loadLabeledReviews("Labeled_Reviews_1158-1200.json")
+reviews = utils.loadLabeledReviews("Labeled_Reviews_TEST_2100-2144.json")
 
 count = 0
 TP = 0.0
